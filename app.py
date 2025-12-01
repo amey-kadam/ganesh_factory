@@ -2,7 +2,6 @@
 from flask import Flask, redirect, url_for
 from config import Config
 from extensions import db
-from models import Labor, Attendance  # make sure models are imported
 
 
 def create_app():
@@ -11,6 +10,9 @@ def create_app():
 
     # init SQLAlchemy
     db.init_app(app)
+
+    # import models so SQLAlchemy knows them
+    from models import Labor, Attendance
 
     # import and register blueprints
     from labor import labor_bp
@@ -25,16 +27,23 @@ def create_app():
     def index():
         return redirect(url_for("labor.register_labor"))
 
-    # 👇 THIS is the important part: create tables on startup
+    # 👇 Route to manually initialize DB tables on Render
+    @app.route("/init-db")
+    def init_db():
+        # This will create all tables if they don't exist
+        db.create_all()
+        return "Database tables created (or already existed)."
+
+    # Optional: also create tables on startup (does nothing if tables already exist)
     with app.app_context():
         db.create_all()
 
     return app
 
 
-# for gunicorn (Render)
+# For gunicorn / Render
 app = create_app()
 
-# for local run: python app.py
+# For local debugging
 if __name__ == "__main__":
     app.run(debug=True)
