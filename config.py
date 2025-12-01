@@ -1,12 +1,16 @@
-# config.py
 import os
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
 
-    # PostgreSQL connection string
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
+    db_url = os.environ.get(
         "DATABASE_URL",
         "postgresql://postgres:123@localhost:5432/ganesh_factory"
     )
+
+
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+    SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
