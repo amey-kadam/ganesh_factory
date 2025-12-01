@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+  <h2 class="mb-4">Mark Attendance</h2>
+
+  <form method="post">
+    <div class="form-group">
+      <label>Labor</label>
+      <select name="labor_id" required>
+        <option value="">-- Select Labor --</option>
+        {% for labor in labors %}
+        <option value="{{ labor.id }}">{{ labor.name }} ({{ labor.id_no }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" name="work_date" value="{{ today_str }}" required>
+    </div>
+
+    <div class="form-group">
+      <label>Type</label>
+      <select name="labor_type" required>
+        <option value="daily">Daily</option>
+        <option value="task">Task-wise</option>
+        <option value="hourly">Hourly</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Wage Amount</label>
+      <input type="number" step="0.01" name="wage_amount" required placeholder="0.00">
+    </div>
+
+    <div class="form-group">
+      <label>Hours Worked (optional)</label>
+      <input type="number" step="0.5" name="hours_worked" placeholder="e.g. 8">
+    </div>
+
+    <div class="form-group">
+      <label>Tasks Done (optional)</label>
+      <input type="number" name="tasks_done" placeholder="e.g. 5">
+    </div>
+
+    <button type="submit" class="btn" style="width: 100%;">Save Attendance</button>
+  </form>
+</div>
+{% endblock %}

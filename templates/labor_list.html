@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin-bottom: 0;">Registered Labors</h2>
+        <a href="{{ url_for('labor.register_labor') }}" class="btn">➕ Register New</a>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>ID No.</th>
+                    <th>Phone No.</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for labor in labors %}
+                <tr>
+                    <td>{{ labor.id }}</td>
+                    <td>{{ labor.name }}</td>
+                    <td>{{ labor.id_no }}</td>
+                    <td>{{ labor.phone_no }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center">No labors registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

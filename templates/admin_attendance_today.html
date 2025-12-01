@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin-bottom: 0;">Today's Attendance – {{ report_date }}</h2>
+        <a href="{{ url_for('admin.mark_attendance') }}" class="btn btn-secondary">⬅ Back</a>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Labor Name</th>
+                    <th>ID No.</th>
+                    <th>Type</th>
+                    <th>Wage</th>
+                    <th>Hours</th>
+                    <th>Tasks</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for attendance, labor in records %}
+                <tr>
+                    <td>{{ labor.name }}</td>
+                    <td>{{ labor.id_no }}</td>
+                    <td>
+                        <span
+                            style="text-transform: capitalize; padding: 0.25rem 0.5rem; background: #e2e8f0; border-radius: 4px; font-size: 0.875rem;">
+                            {{ attendance.labor_type }}
+                        </span>
+                    </td>
+                    <td style="font-weight: 600;">{{ "%.2f"|format(attendance.wage_amount) }}</td>
+                    <td>{{ attendance.hours_worked or '-' }}</td>
+                    <td>{{ attendance.tasks_done or '-' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">No attendance marked for today.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
