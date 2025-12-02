@@ -1,24 +1,76 @@
 {% extends "base.html" %}
+
+{% block title %}Register Labor - Labor Management System{% endblock %}
+{% block page_title %}Register New Labor{% endblock %}
+
 {% block content %}
-<div class="card" style="max-width: 600px; margin: 0 auto;">
-  <h2 class="mb-4">Register New Labor</h2>
-  <form method="post">
-    <div class="form-group">
-      <label>Name</label>
-      <input type="text" name="name" required placeholder="Enter full name">
+<div style="max-width: 800px; margin: 0 auto;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Register New Worker</h2>
+      <p class="card-subtitle">Add a new worker to your company's labor management system</p>
     </div>
 
-    <div class="form-group">
-      <label>ID No.</label>
-      <input type="text" name="id_no" required placeholder="Enter ID number">
-    </div>
+    <form method="POST" action="{{ url_for('labor.register_labor') }}">
+      <div class="grid grid-cols-2">
+        <div class="form-group">
+          <label for="name" class="form-label">Full Name *</label>
+          <input type="text" id="name" name="name" class="form-input" placeholder="John Doe" required autofocus>
+        </div>
 
-    <div class="form-group">
-      <label>Phone No.</label>
-      <input type="text" name="phone_no" required placeholder="Enter phone number">
-    </div>
+        <div class="form-group">
+          <label for="id_no" class="form-label">ID Number *</label>
+          <input type="text" id="id_no" name="id_no" class="form-input" placeholder="EMP001" required>
+          <div class="form-help">Unique identifier for the worker</div>
+        </div>
 
-    <button type="submit" class="btn" style="width: 100%;">Register Labor</button>
-  </form>
+        <div class="form-group">
+          <label for="phone_no" class="form-label">Phone Number *</label>
+          <input type="tel" id="phone_no" name="phone_no" class="form-input" placeholder="+91 98765 43210" required>
+        </div>
+
+        <div class="form-group">
+          <label for="worker_type_id" class="form-label">Worker Type</label>
+          <select id="worker_type_id" name="worker_type_id" class="form-select">
+            <option value="">-- Select Worker Type --</option>
+            {% for wt in worker_types %}
+            <option value="{{ wt.id }}">{{ wt.name }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-help">
+            {% if not worker_types %}
+            No worker types defined. <a href="{{ url_for('settings_bp.worker_types') }}">Create one</a>
+            {% else %}
+            Optional - categorize worker by type
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-lg);">
+        <button type="submit" class="btn btn-primary btn-lg">
+          ➕ Register Worker
+        </button>
+        <a href="{{ url_for('labor.list_labors') }}" class="btn btn-secondary btn-lg">
+          View All Workers
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Info Card -->
+  <div class="card"
+    style="margin-top: var(--space-xl); background: rgba(99, 102, 241, 0.1); border-color: var(--color-primary);">
+    <h4
+      style="color: var(--color-primary-light); margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
+      <span>ℹ️</span> Quick Tips
+    </h4>
+    <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: var(--space-lg);">
+      <li>ID Number must be unique for each worker in your company</li>
+      <li>Worker Type helps categorize workers (Daily, Hourly, Task-wise, etc.)</li>
+      <li>You can manage Worker Types in <a href="{{ url_for('settings_bp.worker_types') }}">Settings</a></li>
+      <li>After registration, you can mark attendance for this worker</li>
+    </ul>
+  </div>
 </div>
 {% endblock %}

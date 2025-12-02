@@ -1,45 +1,176 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ganesh Idol Factory</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>{% block title %}Labor Management System{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block extra_css %}{% endblock %}
 </head>
+
 <body>
-<nav>
-  <div class="container">
-    <a href="{{ url_for('labor.register_labor') }}" class="nav-brand">Ganesh Factory</a>
-    <div class="nav-links">
-      <a href="{{ url_for('labor.register_labor') }}">Register</a>
-      <a href="{{ url_for('admin.mark_attendance') }}">Attendance</a>
-      <a href="{{ url_for('reports.attendance_report') }}">Reports</a>
+  {% if current_user.is_authenticated %}
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">L</div>
+      <div class="sidebar-logo-text">LaborMS</div>
     </div>
-  </div>
-</nav>
 
-<main class="container">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="messages">
-        {% for category, msg in messages %}
-          <div class="alert {{ category }}">{{ msg }}</div>
-        {% endfor %}
+    <nav>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item">
+          <a href="{{ url_for('main.dashboard') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+            <span class="sidebar-nav-icon">🏠</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+
+        <li class="sidebar-nav-item">
+          <a href="{{ url_for('labor.register_labor') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'labor.register_labor' %}active{% endif %}">
+            <span class="sidebar-nav-icon">➕</span>
+            <span>Register Labor</span>
+          </a>
+        </li>
+
+        <li class="sidebar-nav-item">
+          <a href="{{ url_for('labor.list_labors') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'labor.list_labors' %}active{% endif %}">
+            <span class="sidebar-nav-icon">👥</span>
+            <span>Labor List</span>
+          </a>
+        </li>
+
+        <li class="sidebar-nav-item">
+          <a href="{{ url_for('admin.mark_attendance') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'admin.mark_attendance' %}active{% endif %}">
+            <span class="sidebar-nav-icon">✓</span>
+            <span>Mark Attendance</span>
+          </a>
+        </li>
+
+        <li class="sidebar-nav-item">
+          <a href="{{ url_for('admin.today_attendance') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'admin.today_attendance' %}active{% endif %}">
+            <span class="sidebar-nav-icon">📋</span>
+            <span>Today's Attendance</span>
+          </a>
+        </li>
+
+        <li class="sidebar-nav-item">
+          <a href="{{ url_for('attendance_import.import_attendance') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'attendance_import.import_attendance' %}active{% endif %}">
+            <span class="sidebar-nav-icon">📤</span>
+            <span>Import Attendance</span>
+          </a>
+        </li>
+
+        <li class="sidebar-nav-item">
+          <a href="{{ url_for('reports.attendance_report') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'reports.attendance_report' %}active{% endif %}">
+            <span class="sidebar-nav-icon">📊</span>
+            <span>Reports</span>
+          </a>
+        </li>
+
+        <li class="sidebar-nav-item"
+          style="margin-top: var(--space-xl); padding-top: var(--space-xl); border-top: 1px solid var(--divider-color);">
+          <a href="{{ url_for('settings_bp.company_settings') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'settings_bp.company_settings' %}active{% endif %}">
+            <span class="sidebar-nav-icon">⚙️</span>
+            <span>Company Settings</span>
+          </a>
+        </li>
+
+        <li class="sidebar-nav-item">
+          <a href="{{ url_for('settings_bp.worker_types') }}"
+            class="sidebar-nav-link {% if request.endpoint == 'settings_bp.worker_types' %}active{% endif %}">
+            <span class="sidebar-nav-icon">🏷️</span>
+            <span>Worker Types</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header class="header">
+    <h1 class="header-title">{% block page_title %}Dashboard{% endblock %}</h1>
+
+    <div class="header-user">
+      <div class="header-user-info">
+        <div class="header-user-name">{{ current_user.company.name }}</div>
+        <div class="header-user-role">{{ current_user.email }}</div>
       </div>
+      <div class="header-user-avatar">
+        {{ current_user.company.name[0].upper() }}
+      </div>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Logout</a>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Toggle -->
+  <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleSidebar()">
+    ☰
+  </button>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div id="flash-messages">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
     {% endif %}
-  {% endwith %}
+    {% endwith %}
 
-  {% block content %}{% endblock %}
-</main>
+    {% block content %}{% endblock %}
+  </main>
 
-<footer>
-  <div class="container text-center" style="padding: 2rem 0; color: var(--text-light); font-size: 0.875rem;">
-    &copy; {{ now.year if now else 2023 }} Ganesh Idol Factory. All rights reserved.
-  </div>
-</footer>
+  {% else %}
+  <!-- Not authenticated - just show content -->
+  {% block auth_content %}{% endblock %}
+  {% endif %}
 
+  <script>
+    // Auto-dismiss flash messages
+    setTimeout(function () {
+      const flashMessages = document.getElementById('flash-messages');
+      if (flashMessages) {
+        flashMessages.style.transition = 'opacity 0.5s';
+        flashMessages.style.opacity = '0';
+        setTimeout(() => flashMessages.remove(), 500);
+      }
+    }, 5000);
+
+    // Toggle sidebar on mobile
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('active');
+    }
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function (event) {
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.getElementById('mobileMenuToggle');
+
+      if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+        if (!sidebar.contains(event.target) && !toggle.contains(event.target)) {
+          sidebar.classList.remove('active');
+        }
+      }
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
 </body>
+
 </html>

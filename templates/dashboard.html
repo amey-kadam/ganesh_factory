@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Labor Management System{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: var(--space-2xl);">
+    <h2 style="font-size: var(--font-size-3xl); margin-bottom: var(--space-sm);">
+        Welcome, {{ current_user.company.name }}! 👋
+    </h2>
+    <p style="color: var(--text-muted); font-size: var(--font-size-lg);">
+        Here's an overview of your labor management system
+    </p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-3" style="margin-bottom: var(--space-2xl);">
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-card-title">Total Workers</div>
+            <div class="stat-card-icon primary">👥</div>
+        </div>
+        <div class="stat-card-value">{{ total_workers }}</div>
+        <div class="stat-card-change">Registered in your company</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-card-title">Today's Attendance</div>
+            <div class="stat-card-icon success">✓</div>
+        </div>
+        <div class="stat-card-value">{{ today_attendance }}</div>
+        <div class="stat-card-change">Workers marked present today</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-card-title">Today's Wages</div>
+            <div class="stat-card-icon warning">💰</div>
+        </div>
+        <div class="stat-card-value">₹{{ "%.2f"|format(today_wages) }}</div>
+        <div class="stat-card-change">Total wages for today</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="margin-bottom: var(--space-2xl);">
+    <h3 style="font-size: var(--font-size-2xl); margin-bottom: var(--space-lg);">Quick Actions</h3>
+    <div class="grid grid-cols-4">
+        <a href="{{ url_for('labor.register_labor') }}" class="card" style="text-decoration: none; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: var(--space-md);">➕</div>
+            <h4 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Register Labor</h4>
+            <p style="color: var(--text-muted); font-size: var(--font-size-sm);">Add new worker to system</p>
+        </a>
+
+        <a href="{{ url_for('admin.mark_attendance') }}" class="card"
+            style="text-decoration: none; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: var(--space-md);">✓</div>
+            <h4 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Mark Attendance</h4>
+            <p style="color: var(--text-muted); font-size: var(--font-size-sm);">Record worker attendance</p>
+        </a>
+
+        <a href="{{ url_for('attendance_import.import_attendance') }}" class="card"
+            style="text-decoration: none; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: var(--space-md);">📤</div>
+            <h4 style="color: var(--text-primary); margin-bottom: var(--space-sm);">Import CSV</h4>
+            <p style="color: var(--text-muted); font-size: var(--font-size-sm);">Bulk upload attendance</p>
+        </a>
+
+        <a href="{{ url_for('reports.attendance_report') }}" class="card"
+            style="text-decoration: none; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: var(--space-md);">📊</div>
+            <h4 style="color: var(--text-primary); margin-bottom: var(--space-sm);">View Reports</h4>
+            <p style="color: var(--text-muted); font-size: var(--font-size-sm);">Analyze attendance data</p>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Recent Activity</h3>
+        <p class="card-subtitle">Latest attendance records</p>
+    </div>
+
+    {% if recent_attendance %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Worker Name</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Wage Amount</th>
+                    <th>Hours/Tasks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attendance, labor in recent_attendance %}
+                <tr>
+                    <td><strong>{{ labor.name }}</strong></td>
+                    <td>{{ attendance.work_date.strftime('%b %d, %Y') }}</td>
+                    <td><span class="badge badge-primary">{{ attendance.labor_type }}</span></td>
+                    <td><strong>₹{{ "%.2f"|format(attendance.wage_amount) }}</strong></td>
+                    <td>
+                        {% if attendance.hours_worked %}
+                        {{ attendance.hours_worked }} hrs
+                        {% elif attendance.tasks_done %}
+                        {{ attendance.tasks_done }} tasks
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-title">No Recent Activity</div>
+        <div class="empty-state-description">
+            Start marking attendance to see recent activity here
+        </div>
+        <a href="{{ url_for('admin.mark_attendance') }}" class="btn btn-primary" style="margin-top: var(--space-md);">
+            Mark Attendance
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

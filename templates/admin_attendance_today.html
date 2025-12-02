@@ -1,46 +1,140 @@
 {% extends "base.html" %}
+
+{% block title %}Today's Attendance - Labor Management System{% endblock %}
+{% block page_title %}Today's Attendance{% endblock %}
+
 {% block content %}
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h2 style="margin-bottom: 0;">Today's Attendance – {{ report_date }}</h2>
-        <a href="{{ url_for('admin.mark_attendance') }}" class="btn btn-secondary">⬅ Back</a>
+<div class="card" style="margin-bottom: var(--space-xl);">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 class="card-title" style="margin-bottom: var(--space-xs);">
+                Attendance for {{ report_date.strftime('%B %d, %Y') }}
+            </h2>
+            <p class="card-subtitle">Workers marked present today</p>
+        </div>
+        <a href="{{ url_for('admin.mark_attendance') }}" class="btn btn-primary">
+            ✓ Mark Attendance
+        </a>
     </div>
 
+    {% if records %}
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-3" style="margin-bottom: var(--space-xl);">
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-card-title">Workers Present</div>
+                <div class="stat-card-icon success">✓</div>
+            </div>
+            <div class="stat-card-value">{{ records|length }}</div>
+            <div class="stat-card-change">Attendance marked</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-card-title">Total Wages</div>
+                <div class="stat-card-icon warning">💰</div>
+            </div>
+            <div class="stat-card-value">₹{{ "%.2f"|format(records|sum(attribute='0.wage_amount')) }}</div>
+            <div class="stat-card-change">Total for today</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-card-title">Average Wage</div>
+                <div class="stat-card-icon primary">📊</div>
+            </div>
+            <div class="stat-card-value">₹{{ "%.2f"|format(records|sum(attribute='0.wage_amount') / records|length) }}
+            </div>
+            <div class="stat-card-change">Per worker</div>
+        </div>
+    </div>
+
+    <!-- Attendance Table -->
     <div class="table-container">
-        <table>
+        <table class="table">
             <thead>
                 <tr>
-                    <th>Labor Name</th>
-                    <th>ID No.</th>
-                    <th>Type</th>
-                    <th>Wage</th>
-                    <th>Hours</th>
-                    <th>Tasks</th>
+                    <th>Worker</th>
+                    <th>ID Number</th>
+                    <th>Labor Type</th>
+                    <th>Wage Amount</th>
+                    <th>Hours Worked</th>
+                    <th>Tasks Done</th>
                 </tr>
             </thead>
-
             <tbody>
                 {% for attendance, labor in records %}
                 <tr>
-                    <td>{{ labor.name }}</td>
-                    <td>{{ labor.id_no }}</td>
                     <td>
-                        <span
-                            style="text-transform: capitalize; padding: 0.25rem 0.5rem; background: #e2e8f0; border-radius: 4px; font-size: 0.875rem;">
+                        <div style="display: flex; align-items: center; gap: var(--space-md);">
+                            <div
+                                style="width: 36px; height: 36px; border-radius: var(--radius-full); background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: var(--font-size-sm);">
+                                {{ labor.name[0].upper() }}
+                            </div>
+                            <strong>{{ labor.name }}</strong>
+                        </div>
+                    </td>
+                    <td>
+                        <code
+                            style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: var(--font-size-sm);">
+                            {{ labor.id_no }}
+                        </code>
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if attendance.labor_type == 'Daily' %}badge-primary
+                            {% elif attendance.labor_type == 'Hourly' %}badge-success
+                            {% else %}badge-warning{% endif %}">
                             {{ attendance.labor_type }}
                         </span>
                     </td>
-                    <td style="font-weight: 600;">{{ "%.2f"|format(attendance.wage_amount) }}</td>
-                    <td>{{ attendance.hours_worked or '-' }}</td>
-                    <td>{{ attendance.tasks_done or '-' }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" class="text-center">No attendance marked for today.</td>
+                    <td><strong style="color: var(--color-success);">₹{{ "%.2f"|format(attendance.wage_amount)
+                            }}</strong></td>
+                    <td>
+                        {% if attendance.hours_worked %}
+                        <span class="badge badge-success">{{ attendance.hours_worked }} hrs</span>
+                        {% else %}
+                        <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if attendance.tasks_done %}
+                        <span class="badge badge-warning">{{ attendance.tasks_done }} tasks</span>
+                        {% else %}
+                        <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <div
+        style="margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--divider-color); display: flex; justify-content: space-between; align-items: center;">
+        <div style="color: var(--text-muted); font-size: var(--font-size-sm);">
+            Total Records: <strong style="color: var(--text-primary);">{{ records|length }}</strong>
+        </div>
+        <div style="display: flex; gap: var(--space-md);">
+            <a href="{{ url_for('reports.attendance_report') }}" class="btn btn-secondary">
+                📊 View Reports
+            </a>
+            <button onclick="window.print()" class="btn btn-ghost">
+                🖨️ Print
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-title">No Attendance Marked Today</div>
+        <div class="empty-state-description">
+            Start marking attendance for workers to see records here
+        </div>
+        <a href="{{ url_for('admin.mark_attendance') }}" class="btn btn-primary" style="margin-top: var(--space-md);">
+            ✓ Mark Attendance
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

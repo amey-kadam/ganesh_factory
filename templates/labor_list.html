@@ -1,37 +1,152 @@
 {% extends "base.html" %}
+
+{% block title %}Labor List - Labor Management System{% endblock %}
+{% block page_title %}Labor Directory{% endblock %}
+
 {% block content %}
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h2 style="margin-bottom: 0;">Registered Labors</h2>
-        <a href="{{ url_for('labor.register_labor') }}" class="btn">➕ Register New</a>
+<div class="card" style="margin-bottom: var(--space-xl);">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 class="card-title" style="margin-bottom: var(--space-xs);">All Workers</h2>
+            <p class="card-subtitle">Manage your company's workforce</p>
+        </div>
+        <a href="{{ url_for('labor.register_labor') }}" class="btn btn-primary">
+            ➕ Register New Worker
+        </a>
     </div>
 
+    <!-- Search Bar -->
+    <div style="margin-bottom: var(--space-lg);">
+        <input type="text" id="searchInput" class="form-input" placeholder="🔍 Search by name, ID, or phone number..."
+            onkeyup="filterTable()">
+    </div>
+
+    {% if labors %}
     <div class="table-container">
-        <table>
+        <table class="table" id="laborTable">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>ID No.</th>
-                    <th>Phone No.</th>
+                    <th onclick="sortTable(0)" style="cursor: pointer;">
+                        Name <span style="opacity: 0.5;">⇅</span>
+                    </th>
+                    <th onclick="sortTable(1)" style="cursor: pointer;">
+                        ID Number <span style="opacity: 0.5;">⇅</span>
+                    </th>
+                    <th onclick="sortTable(2)" style="cursor: pointer;">
+                        Phone Number <span style="opacity: 0.5;">⇅</span>
+                    </th>
+                    <th onclick="sortTable(3)" style="cursor: pointer;">
+                        Worker Type <span style="opacity: 0.5;">⇅</span>
+                    </th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-
             <tbody>
                 {% for labor in labors %}
                 <tr>
-                    <td>{{ labor.id }}</td>
-                    <td>{{ labor.name }}</td>
-                    <td>{{ labor.id_no }}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: var(--space-md);">
+                            <div
+                                style="width: 40px; height: 40px; border-radius: var(--radius-full); background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white;">
+                                {{ labor.name[0].upper() }}
+                            </div>
+                            <strong>{{ labor.name }}</strong>
+                        </div>
+                    </td>
+                    <td><code
+                            style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: var(--font-size-sm);">{{ labor.id_no }}</code>
+                    </td>
                     <td>{{ labor.phone_no }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="text-center">No labors registered yet.</td>
+                    <td>
+                        {% if labor.worker_type %}
+                        <span class="badge badge-primary">{{ labor.worker_type.name }}</span>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: var(--font-size-sm);">Not assigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin.mark_attendance') }}" class="btn btn-sm btn-ghost"
+                            title="Mark Attendance">
+                            ✓ Attendance
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <div
+        style="margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--divider-color); color: var(--text-muted); font-size: var(--font-size-sm);">
+        Total Workers: <strong style="color: var(--text-primary);">{{ labors|length }}</strong>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <div class="empty-state-title">No Workers Registered</div>
+        <div class="empty-state-description">
+            Start by registering your first worker to begin managing labor
+        </div>
+        <a href="{{ url_for('labor.register_labor') }}" class="btn btn-primary" style="margin-top: var(--space-md);">
+            ➕ Register First Worker
+        </a>
+    </div>
+    {% endif %}
 </div>
+
+<script>
+    // Search/Filter functionality
+    function filterTable() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('laborTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const cells = row.getElementsByTagName('td');
+            let found = false;
+
+            for (let j = 0; j < cells.length - 1; j++) {
+                const cell = cells[j];
+                if (cell) {
+                    const textValue = cell.textContent || cell.innerText;
+                    if (textValue.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            row.style.display = found ? '' : 'none';
+        }
+    }
+
+    // Sort table functionality
+    let sortDirection = {};
+
+    function sortTable(columnIndex) {
+        const table = document.getElementById('laborTable');
+        const tbody = table.getElementsByTagName('tbody')[0];
+        const rows = Array.from(tbody.getElementsByTagName('tr'));
+
+        // Toggle sort direction
+        sortDirection[columnIndex] = !sortDirection[columnIndex];
+        const ascending = sortDirection[columnIndex];
+
+        rows.sort((a, b) => {
+            const aValue = a.getElementsByTagName('td')[columnIndex].textContent.trim();
+            const bValue = b.getElementsByTagName('td')[columnIndex].textContent.trim();
+
+            if (ascending) {
+                return aValue.localeCompare(bValue);
+            } else {
+                return bValue.localeCompare(aValue);
+            }
+        });
+
+        // Re-append sorted rows
+        rows.forEach(row => tbody.appendChild(row));
+    }
+</script>
 {% endblock %}

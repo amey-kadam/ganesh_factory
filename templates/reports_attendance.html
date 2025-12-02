@@ -1,83 +1,230 @@
 {% extends "base.html" %}
+
+{% block title %}Attendance Reports - Labor Management System{% endblock %}
+{% block page_title %}Attendance Reports{% endblock %}
+
 {% block content %}
-<div class="card">
-  <h2 class="mb-4">Attendance Report</h2>
+<div class="card" style="margin-bottom: var(--space-xl);">
+  <div class="card-header">
+    <h2 class="card-title">Attendance Reports</h2>
+    <p class="card-subtitle">View and analyze attendance data with flexible date ranges</p>
+  </div>
 
-  <form method="get"
-    style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border-color);">
-    <div style="flex: 1; min-width: 150px;">
-      <label>Period</label>
-      <select name="period">
-        <option value="daily" {{ 'selected' if period=='daily' else '' }}>Daily</option>
-        <option value="weekly" {{ 'selected' if period=='weekly' else '' }}>Weekly</option>
-        <option value="monthly" {{ 'selected' if period=='monthly' else '' }}>Monthly</option>
-        <option value="custom" {{ 'selected' if period=='custom' else '' }}>Custom</option>
-      </select>
-    </div>
+  <!-- Filter Form -->
+  <form method="GET" action="{{ url_for('reports.attendance_report') }}"
+    style="background: var(--bg-tertiary); padding: var(--space-lg); border-radius: var(--radius-md); margin-bottom: var(--space-xl);">
+    <div class="grid grid-cols-4">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="period" class="form-label">Report Period</label>
+        <select id="period" name="period" class="form-select" onchange="toggleCustomDates()">
+          <option value="daily" {% if period=='daily' %}selected{% endif %}>Daily</option>
+          <option value="weekly" {% if period=='weekly' %}selected{% endif %}>Weekly</option>
+          <option value="monthly" {% if period=='monthly' %}selected{% endif %}>Monthly</option>
+          <option value="custom" {% if period=='custom' %}selected{% endif %}>Custom Range</option>
+        </select>
+      </div>
 
-    <div style="flex: 1; min-width: 150px;">
-      <label>Date (Reference)</label>
-      <input type="date" name="date">
-    </div>
+      <div class="form-group" id="singleDateField" style="margin-bottom: 0;">
+        <label for="date" class="form-label">Select Date</label>
+        <input type="date" id="date" name="date" class="form-input"
+          value="{{ start_date.strftime('%Y-%m-%d') if period != 'custom' else '' }}">
+      </div>
 
-    <div style="flex: 1; min-width: 150px;">
-      <label>Start Date</label>
-      <input type="date" name="start_date">
-    </div>
+      <div class="form-group" id="startDateField" style="margin-bottom: 0; display: none;">
+        <label for="start_date" class="form-label">Start Date</label>
+        <input type="date" id="start_date" name="start_date" class="form-input"
+          value="{{ start_date.strftime('%Y-%m-%d') if period == 'custom' else '' }}">
+      </div>
 
-    <div style="flex: 1; min-width: 150px;">
-      <label>End Date</label>
-      <input type="date" name="end_date">
-    </div>
+      <div class="form-group" id="endDateField" style="margin-bottom: 0; display: none;">
+        <label for="end_date" class="form-label">End Date</label>
+        <input type="date" id="end_date" name="end_date" class="form-input"
+          value="{{ end_date.strftime('%Y-%m-%d') if period == 'custom' else '' }}">
+      </div>
 
-    <div style="flex: 0 0 auto;">
-      <button type="submit" class="btn">Show Report</button>
+      <div style="display: flex; align-items: flex-end;">
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          📊 Generate Report
+        </button>
+      </div>
     </div>
   </form>
 
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-    <div>
-      <h3>From {{ start_date }} to {{ end_date }}</h3>
-      <p style="color: var(--text-light);">Total wages: <strong
-          style="color: var(--success-color); font-size: 1.25rem;">{{ "%.2f"|format(total_wages) }}</strong></p>
+  <!-- Summary Statistics -->
+  <div class="grid grid-cols-4" style="margin-bottom: var(--space-xl);">
+    <div class="stat-card">
+      <div class="stat-card-header">
+        <div class="stat-card-title">Date Range</div>
+        <div class="stat-card-icon primary">📅</div>
+      </div>
+      <div
+        style="font-size: var(--font-size-lg); font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-xs);">
+        {{ start_date.strftime('%b %d') }} - {{ end_date.strftime('%b %d, %Y') }}
+      </div>
+      <div class="stat-card-change">{{ period|capitalize }} Report</div>
     </div>
-    <button onclick="window.print()" class="btn btn-secondary">Print Report</button>
+
+    <div class="stat-card">
+      <div class="stat-card-header">
+        <div class="stat-card-title">Total Records</div>
+        <div class="stat-card-icon success">📋</div>
+      </div>
+      <div class="stat-card-value">{{ records|length }}</div>
+      <div class="stat-card-change">Attendance entries</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-header">
+        <div class="stat-card-title">Total Wages</div>
+        <div class="stat-card-icon warning">💰</div>
+      </div>
+      <div class="stat-card-value">₹{{ "%.2f"|format(total_wages) }}</div>
+      <div class="stat-card-change">Sum of all wages</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-header">
+        <div class="stat-card-title">Average Wage</div>
+        <div class="stat-card-icon primary">📊</div>
+      </div>
+      <div class="stat-card-value">
+        {% if records|length > 0 %}
+        ₹{{ "%.2f"|format(total_wages / records|length) }}
+        {% else %}
+        ₹0.00
+        {% endif %}
+      </div>
+      <div class="stat-card-change">Per attendance</div>
+    </div>
+  </div>
+
+  <!-- Detailed Records -->
+  {% if records %}
+  <div style="margin-bottom: var(--space-lg); display: flex; justify-content: space-between; align-items: center;">
+    <h3 style="font-size: var(--font-size-xl); color: var(--text-primary);">Detailed Records</h3>
+    <button onclick="window.print()" class="btn btn-ghost">
+      🖨️ Print Report
+    </button>
   </div>
 
   <div class="table-container">
-    <table>
+    <table class="table">
       <thead>
         <tr>
           <th>Date</th>
-          <th>Labor</th>
-          <th>Type</th>
-          <th>Wage</th>
+          <th>Worker Name</th>
+          <th>ID Number</th>
+          <th>Labor Type</th>
+          <th>Wage Amount</th>
           <th>Hours</th>
           <th>Tasks</th>
         </tr>
       </thead>
       <tbody>
-        {% for attendance, labor in records %}
+        {% for record in records %}
         <tr>
-          <td>{{ attendance.work_date }}</td>
-          <td>{{ labor.name }}</td>
+          <td>{{ record.Attendance.work_date.strftime('%b %d, %Y') }}</td>
           <td>
-            <span
-              style="text-transform: capitalize; padding: 0.25rem 0.5rem; background: #e2e8f0; border-radius: 4px; font-size: 0.875rem;">
-              {{ attendance.labor_type }}
+            <div style="display: flex; align-items: center; gap: var(--space-sm);">
+              <div
+                style="width: 32px; height: 32px; border-radius: var(--radius-full); background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: var(--font-size-xs);">
+                {{ record.Labor.name[0].upper() }}
+              </div>
+              <strong>{{ record.Labor.name }}</strong>
+            </div>
+          </td>
+          <td>
+            <code
+              style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); font-size: var(--font-size-sm);">
+                            {{ record.Labor.id_no }}
+                        </code>
+          </td>
+          <td>
+            <span class="badge 
+                            {% if record.Attendance.labor_type == 'Daily' %}badge-primary
+                            {% elif record.Attendance.labor_type == 'Hourly' %}badge-success
+                            {% else %}badge-warning{% endif %}">
+              {{ record.Attendance.labor_type }}
             </span>
           </td>
-          <td style="font-weight: 600;">{{ "%.2f"|format(attendance.wage_amount) }}</td>
-          <td>{{ attendance.hours_worked or '-' }}</td>
-          <td>{{ attendance.tasks_done or '-' }}</td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="6" class="text-center">No records found for this period.</td>
+          <td><strong style="color: var(--color-success);">₹{{ "%.2f"|format(record.Attendance.wage_amount) }}</strong>
+          </td>
+          <td>
+            {% if record.Attendance.hours_worked %}
+            {{ record.Attendance.hours_worked }} hrs
+            {% else %}
+            <span style="color: var(--text-muted);">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if record.Attendance.tasks_done %}
+            {{ record.Attendance.tasks_done }}
+            {% else %}
+            <span style="color: var(--text-muted);">-</span>
+            {% endif %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📊</div>
+    <div class="empty-state-title">No Records Found</div>
+    <div class="empty-state-description">
+      No attendance records found for the selected date range. Try adjusting your filters.
+    </div>
+    <a href="{{ url_for('admin.mark_attendance') }}" class="btn btn-primary" style="margin-top: var(--space-md);">
+      ✓ Mark Attendance
+    </a>
+  </div>
+  {% endif %}
 </div>
+
+<script>
+  // Toggle custom date fields based on period selection
+  function toggleCustomDates() {
+    const period = document.getElementById('period').value;
+    const singleDateField = document.getElementById('singleDateField');
+    const startDateField = document.getElementById('startDateField');
+    const endDateField = document.getElementById('endDateField');
+
+    if (period === 'custom') {
+      singleDateField.style.display = 'none';
+      startDateField.style.display = 'block';
+      endDateField.style.display = 'block';
+    } else {
+      singleDateField.style.display = 'block';
+      startDateField.style.display = 'none';
+      endDateField.style.display = 'none';
+    }
+  }
+
+  // Initialize on page load
+  toggleCustomDates();
+</script>
+
+<style>
+  @media print {
+
+    .sidebar,
+    .header,
+    .mobile-menu-toggle,
+    form,
+    button {
+      display: none !important;
+    }
+
+    .main-content {
+      margin-left: 0 !important;
+      margin-top: 0 !important;
+    }
+
+    .card {
+      border: 1px solid #000;
+      box-shadow: none;
+    }
+  }
+</style>
 {% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Import Attendance - Labor Management System{% endblock %}
+{% block page_title %}Import Attendance{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Bulk Import Attendance</h2>
+            <p class="card-subtitle">Upload a CSV file to import multiple attendance records at once</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('attendance_import.import_attendance') }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file" class="form-label">Select CSV File *</label>
+                <input type="file" id="file" name="file" class="form-input" accept=".csv" required
+                    onchange="previewFile()">
+                <div class="form-help">
+                    Upload a CSV file with attendance data. Maximum file size: 5MB
+                </div>
+            </div>
+
+            <div id="filePreview"
+                style="display: none; margin-bottom: var(--space-lg); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md);">
+                <div style="display: flex; align-items: center; gap: var(--space-md);">
+                    <span style="font-size: 2rem;">📄</span>
+                    <div style="flex: 1;">
+                        <div id="fileName" style="font-weight: 600; color: var(--text-primary);"></div>
+                        <div id="fileSize" style="font-size: var(--font-size-sm); color: var(--text-muted);"></div>
+                    </div>
+                    <button type="button" onclick="clearFile()" class="btn btn-sm btn-ghost">✕</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                📤 Upload and Import
+            </button>
+        </form>
+    </div>
+
+    <!-- CSV Format Instructions -->
+    <div class="card" style="margin-top: var(--space-xl);">
+        <div class="card-header">
+            <h3 class="card-title">CSV File Format</h3>
+            <p class="card-subtitle">Your CSV file must follow this exact format</p>
+        </div>
+
+        <div
+            style="background: var(--bg-primary); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg); overflow-x: auto;">
+            <pre style="color: var(--color-success); font-size: var(--font-size-sm); margin: 0;"><code>id_no,work_date,labor_type,wage_amount,hours_worked,tasks_done
+EMP001,2024-12-02,Daily,500.00,,
+EMP002,2024-12-02,Hourly,800.00,8.5,
+EMP003,2024-12-02,Task-wise,600.00,,5</code></pre>
+        </div>
+
+        <h4 style="font-size: var(--font-size-lg); margin-bottom: var(--space-md); color: var(--text-primary);">
+            Column Descriptions
+        </h4>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Column Name</th>
+                    <th>Required</th>
+                    <th>Format</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code
+                            style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm);">id_no</code>
+                    </td>
+                    <td><span class="badge badge-danger">Required</span></td>
+                    <td>Text</td>
+                    <td>Worker's ID number (must exist in system)</td>
+                </tr>
+                <tr>
+                    <td><code
+                            style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm);">work_date</code>
+                    </td>
+                    <td><span class="badge badge-danger">Required</span></td>
+                    <td>YYYY-MM-DD</td>
+                    <td>Date of work (e.g., 2024-12-02)</td>
+                </tr>
+                <tr>
+                    <td><code
+                            style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm);">labor_type</code>
+                    </td>
+                    <td><span class="badge badge-danger">Required</span></td>
+                    <td>Text</td>
+                    <td>Daily, Hourly, or Task-wise</td>
+                </tr>
+                <tr>
+                    <td><code
+                            style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm);">wage_amount</code>
+                    </td>
+                    <td><span class="badge badge-danger">Required</span></td>
+                    <td>Number</td>
+                    <td>Wage amount (e.g., 500.00)</td>
+                </tr>
+                <tr>
+                    <td><code
+                            style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm);">hours_worked</code>
+                    </td>
+                    <td><span class="badge badge-success">Optional</span></td>
+                    <td>Number</td>
+                    <td>Hours worked (for Hourly type)</td>
+                </tr>
+                <tr>
+                    <td><code
+                            style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm);">tasks_done</code>
+                    </td>
+                    <td><span class="badge badge-success">Optional</span></td>
+                    <td>Number</td>
+                    <td>Tasks completed (for Task-wise type)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div
+            style="margin-top: var(--space-lg); padding: var(--space-md); background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--color-info); border-radius: var(--radius-md);">
+            <h5
+                style="color: var(--color-info); margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-sm);">
+                <span>ℹ️</span> Important Notes
+            </h5>
+            <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: var(--space-lg); margin: 0;">
+                <li>The first row must contain column headers exactly as shown above</li>
+                <li>Worker ID must already exist in your company's labor list</li>
+                <li>Date format must be YYYY-MM-DD (e.g., 2024-12-02)</li>
+                <li>Leave optional fields empty if not applicable (but keep the comma)</li>
+                <li>File must be UTF-8 encoded</li>
+                <li>Rows with missing required data will be skipped</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: var(--space-lg); text-align: center;">
+            <a href="data:text/csv;charset=utf-8,id_no,work_date,labor_type,wage_amount,hours_worked,tasks_done%0AEMP001,2024-12-02,Daily,500.00,,%0AEMP002,2024-12-02,Hourly,800.00,8.5,%0AEMP003,2024-12-02,Task-wise,600.00,,5"
+                download="attendance_sample.csv" class="btn btn-secondary">
+                📥 Download Sample CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewFile() {
+        const fileInput = document.getElementById('file');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            filePreview.style.display = 'block';
+        } else {
+            filePreview.style.display = 'none';
+        }
+    }
+
+    function clearFile() {
+        document.getElementById('file').value = '';
+        document.getElementById('filePreview').style.display = 'none';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+</script>
+{% endblock %}

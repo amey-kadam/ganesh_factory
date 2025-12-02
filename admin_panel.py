@@ -1,6 +1,7 @@
 # admin_panel.py
 from datetime import datetime, date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
 from extensions import db
 from models import Labor, Attendance
 
@@ -8,8 +9,11 @@ admin_bp = Blueprint("admin", __name__, template_folder="templates")
 
 
 @admin_bp.route("/attendance", methods=["GET", "POST"])
+@login_required
 def mark_attendance():
-    labors = Labor.query.order_by(Labor.name).all()
+    labors = Labor.query.filter_by(
+        company_id=current_user.company_id
+    ).order_by(Labor.name).all()
 
     if request.method == "POST":
         labor_id = request.form.get("labor_id")
@@ -23,13 +27,21 @@ def mark_attendance():
             flash("Labor, date, type and wage are required.", "danger")
             return redirect(url_for("admin.mark_attendance"))
 
+        # Ensure labor belongs to current company
+        labor = Labor.query.filter_by(
+            id=labor_id,
+            company_id=current_user.company_id
+        ).first()
+        if not labor:
+            flash("Invalid labor selected.", "danger")
+            return redirect(url_for("admin.mark_attendance"))
+
         try:
             work_date = datetime.strptime(work_date_str, "%Y-%m-%d").date()
         except ValueError:
             flash("Invalid date format.", "danger")
             return redirect(url_for("admin.mark_attendance"))
 
-        # Convert numbers
         try:
             wage_amount = float(wage_amount)
         except ValueError:
@@ -49,12 +61,13 @@ def mark_attendance():
                 tasks_done = None
 
         attendance = Attendance(
-            labor_id=labor_id,
+            labor_id=labor.id,
             work_date=work_date,
             labor_type=labor_type,
             wage_amount=wage_amount,
             hours_worked=hours_worked,
             tasks_done=tasks_done,
+            company_id=current_user.company_id,
         )
 
         db.session.add(attendance)
@@ -63,7 +76,6 @@ def mark_attendance():
         flash("Attendance saved successfully.", "success")
         return redirect(url_for("admin.today_attendance"))
 
-    # GET – show form
     today_str = date.today().strftime("%Y-%m-%d")
     return render_template(
         "admin_attendance.html",
@@ -73,10 +85,12 @@ def mark_attendance():
 
 
 @admin_bp.route("/attendance/today")
+@login_required
 def today_attendance():
     today = date.today()
     records = (
-        Attendance.query.filter_by(work_date=today)
+        Attendance.query
+        .filter_by(work_date=today, company_id=current_user.company_id)
         .join(Labor)
         .add_entity(Labor)
         .all()

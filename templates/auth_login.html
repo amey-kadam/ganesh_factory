@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Labor Management System{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <div class="auth-logo-icon">L</div>
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to your company account</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="you@company.com" required
+                    autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-input"
+                    placeholder="Enter your password" required>
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+                <label style="display: flex; align-items: center; margin-bottom: 0;">
+                    <input type="checkbox" name="remember" class="form-checkbox">
+                    <span style="font-size: var(--font-size-sm); color: var(--text-secondary);">Remember me</span>
+                </label>
+                <a href="{{ url_for('auth.forgot_password') }}" style="font-size: var(--font-size-sm);">
+                    Forgot password?
+                </a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                Sign In
+            </button>
+        </form>
+
+        <div class="auth-divider">or</div>
+
+        <div class="auth-footer">
+            Don't have an account?
+            <a href="{{ url_for('auth.register') }}" style="font-weight: 600;">Create Company Account</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-dismiss flash messages
+    setTimeout(function () {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 5000);
+</script>
+{% endblock %}

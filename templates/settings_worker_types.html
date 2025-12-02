@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Types - Labor Management System{% endblock %}
+{% block page_title %}Worker Types{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div class="grid grid-cols-2" style="gap: var(--space-xl);">
+        <!-- Add New Worker Type -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Add Worker Type</h2>
+                <p class="card-subtitle">Create a new category for workers</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('settings_bp.worker_types') }}">
+                <div class="form-group">
+                    <label for="name" class="form-label">Type Name *</label>
+                    <input type="text" id="name" name="name" class="form-input"
+                        placeholder="e.g., Daily, Hourly, Task-wise" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" name="description" class="form-textarea" rows="3"
+                        placeholder="Brief description of this worker type"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    ➕ Add Worker Type
+                </button>
+            </form>
+        </div>
+
+        <!-- Existing Worker Types -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Existing Worker Types</h2>
+                <p class="card-subtitle">{{ worker_types|length }} type(s) defined</p>
+            </div>
+
+            {% if worker_types %}
+            <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                {% for wt in worker_types %}
+                <div
+                    style="padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); border-left: 4px solid var(--color-primary);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-sm);">
+                        <div>
+                            <h4
+                                style="font-size: var(--font-size-lg); font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-xs);">
+                                {{ wt.name }}
+                            </h4>
+                            {% if wt.description %}
+                            <p style="color: var(--text-secondary); font-size: var(--font-size-sm); margin: 0;">
+                                {{ wt.description }}
+                            </p>
+                            {% else %}
+                            <p
+                                style="color: var(--text-muted); font-size: var(--font-size-sm); font-style: italic; margin: 0;">
+                                No description provided
+                            </p>
+                            {% endif %}
+                        </div>
+                        <span class="badge badge-primary">
+                            {{ wt.labors|length }} workers
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding: var(--space-xl) var(--space-md);">
+                <div class="empty-state-icon" style="font-size: 3rem;">🏷️</div>
+                <div class="empty-state-title" style="font-size: var(--font-size-lg);">No Worker Types</div>
+                <div class="empty-state-description">
+                    Create your first worker type to categorize workers
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card"
+        style="margin-top: var(--space-xl); background: rgba(59, 130, 246, 0.1); border-color: var(--color-info);">
+        <h4
+            style="color: #93c5fd; margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
+            <span>ℹ️</span> About Worker Types
+        </h4>
+        <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: var(--space-lg); margin: 0;">
+            <li>Worker types help you categorize your workforce (e.g., Daily, Hourly, Task-wise)</li>
+            <li>You can assign a worker type when registering new workers</li>
+            <li>Worker types are optional but recommended for better organization</li>
+            <li>Common types include: Daily Wage, Hourly, Task-based, Contract, Permanent</li>
+        </ul>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="margin-top: var(--space-xl); text-align: center;">
+        <a href="{{ url_for('labor.register_labor') }}" class="btn btn-secondary">
+            👥 Register New Worker
+        </a>
+        <a href="{{ url_for('settings_bp.company_settings') }}" class="btn btn-ghost">
+            ⚙️ Company Settings
+        </a>
+    </div>
+</div>
+{% endblock %}
