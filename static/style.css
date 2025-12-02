@@ -1181,3 +1181,6 @@ a:hover {
   color: var(--text-muted);
   margin-bottom: var(--space-xl);
 }
+/* Hide sidebar scrollbar for all browsers */
+.sidebar { scrollbar-width: none; -ms-overflow-style: none; }
+.sidebar::-webkit-scrollbar { display: none; }
